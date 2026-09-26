@@ -65,12 +65,18 @@ class SegmentationAdapter:
 
 
 def get_adapter(adapter_name: str, settings):
-    """Factory - returns the configured primary depth adapter, with MiDaS or
-    FallbackDepthAdapter if PyTorch is not available."""
+    """Factory - returns the configured primary depth adapter, with FallbackDepthAdapter
+    when running on resource-constrained environments or in demo mode."""
+    from app.ml.adapters.fallback_adapter import FallbackDepthAdapter
     from app.ml.adapters.im2height_adapter import Im2HeightAdapter
     from app.ml.adapters.midas_adapter import MiDaSAdapter
     from app.ml.adapters.dav2_adapter import DepthAnythingV2Adapter
-    from app.ml.adapters.fallback_adapter import FallbackDepthAdapter
+
+    # In DEMO_MODE (default for free-tier cloud deployments with 512MB RAM),
+    # use the instant OpenCV topographic elevation adapter to avoid downloading
+    # 1.5GB neural network weights and getting OOM-killed.
+    if getattr(settings, "DEMO_MODE", False) or adapter_name == "fallback":
+        return FallbackDepthAdapter()
 
     if adapter_name == "dav2":
         adapter = DepthAnythingV2Adapter()

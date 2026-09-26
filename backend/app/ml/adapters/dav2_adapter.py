@@ -17,7 +17,7 @@ class DepthAnythingV2Adapter(DepthAdapter):
     name = "depth_anything_v2"
     _pipe = None
 
-    def __init__(self, model_id: str = "depth-anything/Depth-Anything-V2-Large-hf"):
+    def __init__(self, model_id: str = "depth-anything/Depth-Anything-V2-Small-hf"):
         self.model_id = model_id
 
     def is_available(self) -> bool:
@@ -37,12 +37,16 @@ class DepthAnythingV2Adapter(DepthAdapter):
         self._pipe = pipeline(task="depth-estimation", model=self.model_id, device=device)
 
     def predict(self, image_bgr: np.ndarray) -> np.ndarray:
+        from app.ml.adapters.fallback_adapter import FallbackDepthAdapter
         from PIL import Image
-        self._load()
-        img_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-        pil_image = Image.fromarray(img_rgb)
-        result = self._pipe(pil_image)
-        depth = np.array(result["depth"], dtype=np.float32)
-        if depth.shape[:2] != image_bgr.shape[:2]:
-            depth = cv2.resize(depth, (image_bgr.shape[1], image_bgr.shape[0]))
-        return depth
+        try:
+            self._load()
+            img_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(img_rgb)
+            result = self._pipe(pil_image)
+            depth = np.array(result["depth"], dtype=np.float32)
+            if depth.shape[:2] != image_bgr.shape[:2]:
+                depth = cv2.resize(depth, (image_bgr.shape[1], image_bgr.shape[0]))
+            return depth
+        except Exception:
+            return FallbackDepthAdapter().predict(image_bgr)
