@@ -19,6 +19,7 @@ cors_origins = list(
             "http://localhost:3001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "https://depthwizard-one.vercel.app",
             *settings.cors_origins_list,
         ]
     )
@@ -35,6 +36,7 @@ app.add_middleware(
 )
 
 @app.get("/")
+@app.head("/")
 def root():
     return {
         "app": "DepthWizard API",
@@ -45,10 +47,13 @@ def root():
     }
 
 @app.get("/health")
+@app.head("/health")
 def health():
     return {"status": "ok", "app": "DepthWizard"}
 
+# Mount both with /api/v1 prefix and at root for full frontend compatibility
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router)
 
 
 @app.on_event("startup")
