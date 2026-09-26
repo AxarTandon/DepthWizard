@@ -5,8 +5,8 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
-backend/storage/
-storage/
+/backend/storage/
+!backend/app/storage/
 backend/.env
 *.db
 *.sqlite
@@ -28,4 +28,3 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
-
